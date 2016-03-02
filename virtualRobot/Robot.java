@@ -1,17 +1,20 @@
 package virtualRobot;
 
+import java.util.Vector;
+
+import dataStructures.GeneralProtocol;
 import dataStructures.Map;
 import dataStructures.Node;
-import routeExecution.RouteExecution;
 
 public class Robot {
 	private int robotID;
 	private Map map;
 	private Node currentNode;
-	private int pathSequence[];
+	private Vector<Integer> pathSequence;
 	private int pathSequenceProgress = 0;//Index of the next move
 	
-	public Robot(int robotID, Map map, Node currentNode, int pathSequence[]){
+	
+	public Robot(int robotID, Map map, Node currentNode, Vector<Integer> pathSequence){
 		this.robotID = robotID;
 		this.map = map;
 		this.currentNode = currentNode;
@@ -19,23 +22,23 @@ public class Robot {
 	}
 	
 	public void goToNextNode(){
-		if (pathSequenceProgress >= pathSequence.length)
+		if (pathSequenceProgress >= pathSequence.size())
 			return;//End of path
 		
-		switch (pathSequence[pathSequenceProgress]) {
-		case RouteExecution.NORTH:
+		switch (pathSequence.get(pathSequenceProgress++)) {
+		case GeneralProtocol.NORTH:
 			moveUp();
 			break;
 
-		case RouteExecution.SOUTH:
+		case GeneralProtocol.SOUTH:
 			moveDown();	
 			break;
 					
-		case RouteExecution.EAST:
+		case GeneralProtocol.EAST:
 			moveRight();
 			break;
 			
-		case RouteExecution.WEST:
+		case GeneralProtocol.WEST:
 			moveLeft();
 			break;
 		}

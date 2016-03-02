@@ -1,6 +1,10 @@
+import java.io.IOException;
+import java.util.Vector;
+
 import dataStructures.Map;
 import dataStructures.Node;
 import pathFinding.PathFinding;
+import virtualRobot.Robot;
 
 public class Test {
 
@@ -34,9 +38,28 @@ public class Test {
 		test.map.getNode(4, 7).status = Node.WALL;
 		test.map.getNode(3, 7).status = Node.WALL;
 		
+		Node startNode = test.map.getNode(7, 1);
+		Node endNode = test.map.getNode(6, 6);
+		
 		PathFinding pathFinding = new PathFinding(test.map);
-		pathFinding.GetPath(test.map.getNode(7, 1), test.map.getNode(6, 6));
-		test.DrawMap();
+		Vector<Integer> pathSequence = pathFinding.GetPath(startNode, endNode);
+		
+		Robot robot = new Robot(1, test.map, startNode, pathSequence);
+
+		int time = 0;
+		while(true){
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			robot.goToNextNode();
+			test.DrawMap();
+			
+			System.out.println("////////////////////////////////////////////////////////////////////////////////////////");
+		}
 	}
 
 }

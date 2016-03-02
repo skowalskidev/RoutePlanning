@@ -40,12 +40,18 @@ public class PathFinding {
 	private int fCost = Integer.MAX_VALUE;
 	private Vector<Integer> fCosts = new Vector<Integer>(0);
 	
+	///////////////////////////////////////////////////////////////////Time & Pos Reservations///////////////////////////////////////////////////////////////////////////
+	TimePosReservations timePosReservations;
+	int time;
+	private Vector<Node> nodePath = new Vector<Node>(0);
+	
 	/**
 	 * Only set map once and keep for the duration of the program
 	 * @param map
 	 */
 	public PathFinding(Map map) {
 		this.map = map;
+		timePosReservations = new TimePosReservations();
 	}
 	
 	/*private enum motionInstruction {
@@ -193,19 +199,21 @@ public class PathFinding {
 			Node toNode = pathTrace.get(i).toNode;
 			if (goalNode.equals(toNode)){//Found path trace end
 				goalNode.status = Node.GOAL;
+				nodePath.insertElementAt(goalNode, 0);
 				
 				Node fromNode = pathTrace.get(i).fromNode;
-				directions.insertElementAt(map.getRelativePosition(fromNode, toNode), 0);//insert last direction i.e. stack vector
-				System.out.println("Last directi0n: " + map.getRelativePosition(fromNode, toNode));
+				directions.insertElementAt(map.getRelativePosition(fromNode, toNode), 0);//insert last direction (not == orientation!) i.e. stack vector
+				
 				boolean foundPrevNode;
 				
 				do{
 					foundPrevNode = false;
 					
-					for (int j = 0; j < pathTrace.size(); j++){
+					for (int j = 0; j < pathTrace.size() - 1; j++){//Goal node at the end therefore dont need to check it again hence -1
 						toNode = pathTrace.get(j).toNode;
 						if (fromNode.equals(toNode)){//Found prev node container
 							fromNode.status = Node.GOALPATH; noOfSteps++;
+							nodePath.insertElementAt(fromNode, 0);
 							fromNode = pathTrace.get(j).fromNode;
 							directions.insertElementAt(map.getRelativePosition(fromNode, toNode), 0);
 							foundPrevNode = true;
@@ -215,12 +223,14 @@ public class PathFinding {
 				}
 				while(foundPrevNode);
 				
-				fromNode.status = Node.START;
+				fromNode.status = Node.START;//Starting node
 				
 				//End of path trace
 				System.out.println("No of steps: " + noOfSteps);
-				for (int d : directions){
-					System.out.print(d + ", ");
+				for (int d = 0; d < nodePath.size(); d++){
+					timePosReservations.addReservation(time + d + 1, nodePath.get(d));
+					System.out.println("Added reservation Time: " + (time + d + 1) + " Node: " + nodePath.get(d).x + "," + nodePath.get(d).y);
+					//System.out.print(directions.get(d) + ", ");
 				}
 				System.out.println();
 				return directions;
@@ -232,4 +242,54 @@ public class PathFinding {
 		}
 		return null;
 	}
+	
+	public void setTime(int time) {
+		this.time = time;
+	}
 }
+
+
+
+
+
+/*
+function A*(start,goal)
+ClosedSet := {}    	  // The set of nodes already evaluated.
+OpenSet := {start}    // The set of tentative nodes to be evaluated, initially containing the start node
+Came_From := the empty map    // The map of navigated nodes.
+
+g_score := map with default value of Infinity
+g_score[start] := 0    // Cost from start along best known path.
+// Estimated total cost from start to goal through y.
+f_score := map with default value of Infinity
+f_score[start] := heuristic_cost_estimate(start, goal)
+
+while OpenSet is not empty
+    current := the node in OpenSet having the lowest f_score[] value
+    if current = goal
+        return reconstruct_path(Came_From, goal)
+
+    OpenSet.Remove(current)
+    ClosedSet.Add(current)
+    for each neighbor of current
+        if neighbor in ClosedSet
+            continue		// Ignore the neighbor which is already evaluated.
+        tentative_g_score := g_score[current] + dist_between(current,neighbor) // length of this path.
+        if neighbor not in OpenSet	// Discover a new node
+            OpenSet.Add(neighbor)
+        else if tentative_g_score >= g_score[neighbor]
+            continue		// This is not a better path.
+
+        // This path is the best until now. Record it!
+        Came_From[neighbor] := current
+        g_score[neighbor] := tentative_g_score
+        f_score[neighbor] := g_score[neighbor] + heuristic_cost_estimate(neighbor, goal)
+
+return failure
+
+function reconstruct_path(Came_From,current)
+total_path := [current]
+while current in Came_From.Keys:
+    current := Came_From[current]
+    total_path.append(current)
+return total_path*/
