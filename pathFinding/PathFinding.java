@@ -5,7 +5,15 @@ import java.util.Vector;
 import dataStructures.CameFrom;
 import dataStructures.Map;
 import dataStructures.Node;
+import dataStructures.Reservation;
+import virtualRobot.Robot;
 
+/**
+ * Returns an optimal path from a start node to the goal node considering other robots' motion i.e. avoids collisions with both walls & other robots
+ * @author Szymon
+ * As an extension I could make the algorithm tell the robot to wait for a mobile robot to pass instead of moving around the mobile robot to minimise travel distance
+ * e.g. in the case Robot0 1,0 -> 1,2 Robot1 0,1 -> 2,1
+ */
 public class PathFinding {
 	/**
 	 * Node map
@@ -18,15 +26,16 @@ public class PathFinding {
 	 * Explored node set
 	 */
 	private Vector<Node> explored = new Vector<Node>(0);
+	
 	/**
 	 * Frontier node set
 	 */
 	private Vector<Node> frontier = new Vector<Node>(0);
+	
 	/**
 	 * PathTrace node set
 	 */
 	private Vector<CameFrom> pathTrace = new Vector<CameFrom>(0);
-	
 	
 	/**
 	 * gCosts(cost of journey from start to current node) for explored & frontier nodes
@@ -44,6 +53,7 @@ public class PathFinding {
 	TimePosReservations timePosReservations;
 	int time;
 	private Vector<Node> nodePath = new Vector<Node>(0);
+	private Vector<Robot> robots = new Vector<Robot>(0);
 	
 	/**
 	 * Only set map once and keep for the duration of the program
@@ -53,19 +63,19 @@ public class PathFinding {
 		this.map = map;
 		timePosReservations = new TimePosReservations();
 	}
+
+	public void addRobot(Robot robot){
+		robots.add(robot);
+	}
 	
-	/*private enum motionInstruction {
-		forward, back, left, right;
-	}*/
-	
-	public Vector<Integer> GetPath(Node startNode, Node goalNode) {
-		SetUp(startNode, goalNode);//Set up & clean up after potential previous search
+	public Vector<Integer> GetPath(Node startNode, Node goalNode, int time, Robot robot) {
+		SetUp(startNode, goalNode, time);//Set up & clean up after potential previous search
 		
 		while(!frontier.isEmpty()) {
 			current = GetBestNode();
 			
 			if(current.equals(goalNode))
-				return ReconstructPath(goalNode);
+				return ReconstructPath(goalNode, robot);
 			
 			int currentGCost = GetGCost(current);
 			RemoveFromFrontier(current);
@@ -88,7 +98,7 @@ public class PathFinding {
 					neighbourNode = map.getRightNode(current);
 					break;
 				}
-				if(neighbourNode == null || explored.contains(neighbourNode) || neighbourNode.status == Node.WALL){//Tried to find neighbour out of bounds
+				if(neighbourNode == null || explored.contains(neighbourNode) || neighbourNode.status == Node.WALL){//null - Tried to find neighbour out of bounds
 					continue;
 				}
 				
@@ -111,13 +121,16 @@ public class PathFinding {
 		return null;//Return Failure
 	}
 	
-	private void SetUp(Node startNode, Node goalNode){
+	private void SetUp(Node startNode, Node goalNode, int time){
+		this.time = time;
+		
 		explored.clear();
 		
 		frontier.clear();
 		frontier.add(startNode);
 		
 		pathTrace.clear();
+		nodePath.clear();
 		
 		gCost = Integer.MAX_VALUE;
 		gCosts.clear();
@@ -188,11 +201,11 @@ public class PathFinding {
 	/**
 	 * 
 	 * @param goalNode
+	 * @param robot 
 	 * @return set of directions to the goal
 	 */
-	private Vector<Integer> ReconstructPath(Node goalNode) {
+	private Vector<Integer> ReconstructPath(Node goalNode, Robot robot) {
 		Vector<Integer> directions = new Vector<Integer>(0);
-		int noOfSteps = 0;//Debug
 		
 		//Look for goal node i.e. a starting point to trace the solution path
 		for (int i = 0; i < pathTrace.size(); i++){
@@ -212,7 +225,7 @@ public class PathFinding {
 					for (int j = 0; j < pathTrace.size() - 1; j++){//Goal node at the end therefore dont need to check it again hence -1
 						toNode = pathTrace.get(j).toNode;
 						if (fromNode.equals(toNode)){//Found prev node container
-							fromNode.status = Node.GOALPATH; noOfSteps++;
+							fromNode.status = Node.GOALPATH;
 							nodePath.insertElementAt(fromNode, 0);
 							fromNode = pathTrace.get(j).fromNode;
 							directions.insertElementAt(map.getRelativePosition(fromNode, toNode), 0);
@@ -226,12 +239,17 @@ public class PathFinding {
 				fromNode.status = Node.START;//Starting node
 				
 				//End of path trace
-				System.out.println("No of steps: " + noOfSteps);
-				for (int d = 0; d < nodePath.size(); d++){
+				System.out.println("No of steps: " + directions.size());
+				int d = 0;
+				for (; d < nodePath.size(); d++){
 					timePosReservations.addReservation(time + d + 1, nodePath.get(d));
 					System.out.println("Added reservation Time: " + (time + d + 1) + " Node: " + nodePath.get(d).x + "," + nodePath.get(d).y);
 					//System.out.print(directions.get(d) + ", ");
 				}
+				d--;
+				robot.setLastReservation(new Reservation(time + d + 1, nodePath.get(d)));//Set last reservation for robot
+				System.out.println("Robot last reservation " + "RobotID: " + robot.getID() + " Time: " + (time + d + 1) + " Node: " + nodePath.get(d).x + "," + nodePath.get(d).y);
+				
 				System.out.println();
 				return directions;
 			}
@@ -241,10 +259,6 @@ public class PathFinding {
 				break;
 		}
 		return null;
-	}
-	
-	public void setTime(int time) {
-		this.time = time;
 	}
 }
 

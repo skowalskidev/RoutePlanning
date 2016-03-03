@@ -1,4 +1,3 @@
-import java.io.IOException;
 import java.util.Vector;
 
 import dataStructures.Map;
@@ -38,15 +37,19 @@ public class Test {
 		test.map.getNode(4, 7).status = Node.WALL;
 		test.map.getNode(3, 7).status = Node.WALL;
 		
-		Node startNode = test.map.getNode(7, 1);
-		Node endNode = test.map.getNode(6, 6);
+		int time = 0;
+		
+		Node startNode = test.map.getNode(1, 4);
+		Node endNode = test.map.getNode(8, 7);
+		
+		Robot robot = new Robot(0, test.map);
 		
 		PathFinding pathFinding = new PathFinding(test.map);
-		Vector<Integer> pathSequence = pathFinding.GetPath(startNode, endNode);
+		pathFinding.addRobot(robot);
+		Vector<Integer> pathSequence = pathFinding.GetPath(startNode, endNode, time, robot);
 		
-		Robot robot = new Robot(1, test.map, startNode, pathSequence);
+		robot.setUpPath(startNode, pathSequence);
 
-		int time = 0;
 		while(true){
 			try {
 				Thread.sleep(1000);
@@ -58,6 +61,7 @@ public class Test {
 			robot.goToNextNode();
 			test.DrawMap();
 			
+			time++;
 			System.out.println("////////////////////////////////////////////////////////////////////////////////////////");
 		}
 	}

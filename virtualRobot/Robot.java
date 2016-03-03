@@ -5,6 +5,7 @@ import java.util.Vector;
 import dataStructures.GeneralProtocol;
 import dataStructures.Map;
 import dataStructures.Node;
+import dataStructures.Reservation;
 
 public class Robot {
 	private int robotID;
@@ -13,10 +14,18 @@ public class Robot {
 	private Vector<Integer> pathSequence;
 	private int pathSequenceProgress = 0;//Index of the next move
 	
+	/**
+	 * After robot stops at goal and remains stationary(no jobs) it becomes an obstacle and has the node it resides at reserved until the next move
+	 */
+	private Reservation lastReservation;
 	
-	public Robot(int robotID, Map map, Node currentNode, Vector<Integer> pathSequence){
+	
+	public Robot(int robotID, Map map){
 		this.robotID = robotID;
 		this.map = map;
+	}
+	
+	public void setUpPath(Node currentNode, Vector<Integer> pathSequence){
 		this.currentNode = currentNode;
 		this.pathSequence = pathSequence;
 	}
@@ -64,5 +73,17 @@ public class Robot {
 	
 	public void moveRight() {
 		move(map.getRightNode(currentNode));
+	}
+	
+	public void setLastReservation(Reservation lastReservation) {
+		this.lastReservation = lastReservation;
+	}
+	
+	public Reservation getLastReservation() {
+		return lastReservation;
+	}
+	
+	public int getID(){
+		return robotID;
 	}
 }
